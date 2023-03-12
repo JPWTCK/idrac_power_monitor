@@ -1,24 +1,24 @@
 {
-  "title": "iDrac power monitor",
+  "title": "iDrac power monitor", // A descriptive title for this configuration file
   "config": {
-    "step": {
+    "step": { // The first step of the configuration process, in which the user enters iDrac credentials
       "user": {
-        "title": "iDrac power monitor",
-        "description": "Enter the iDrac's credentials.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+        "title": "iDrac power monitor", // A title for this step
+        "description": "Enter the iDrac's credentials.", // A brief description of what the user should do in this step
+        "data": { // The data fields that the user should fill in
+          "host": "[%key:common::config_flow::data::host%]", // A placeholder for the iDrac host address
+          "username": "[%key:common::config_flow::data::username%]", // A placeholder for the iDrac username
+          "password": "[%key:common::config_flow::data::password%]" // A placeholder for the iDrac password
         }
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "redfish_config": "Redfish not enabled. Start the iDRAC GUI with a web browser and traverse to the Network Service page - Server -> iDRAC Settings -> Network -> Services -> Redfish. Verify that Enabled is selected.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+    "error": { // Error messages that may be encountered during the configuration process
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]", // Placeholder for a message if connection to the iDrac cannot be established
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]", // Placeholder for a message if the user enters invalid authentication credentials
+      "redfish_config": "Redfish not enabled. Start the iDRAC GUI with a web browser and traverse to the Network Service page - Server -> iDRAC Settings -> Network -> Services -> Redfish. Verify that Enabled is selected.", // A message that indicates that Redfish is not enabled on the iDrac and provides instructions for enabling it
+      "unknown": "[%key:common::config_flow::error::unknown%]" // Placeholder for a generic error message
     },
-    "abort": {
+    "abort": { // Error message if the device has already been configured
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
