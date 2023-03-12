@@ -1,5 +1,4 @@
 import requests
-from requests.exceptions import HTTPError
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -7,50 +6,67 @@ from .const import (
     JSON_POWER_CONSUMED_WATTS, JSON_FIRMWARE_VERSION
 )
 
-BASE_URL = 'https://'
+# Define some constants for the iDRAC REST API paths
+protocol = 'https://'
+drac_managers_path = '/redfish/v1/Managers/iDRAC.Embedded.1'
+drac_chassis_path = '/redfish/v1/Chassis/System.Embedded.1'
+drac_powercontrol_path = '/redfish/v1/Chassis/System.Embedded.1/Power/PowerControl'
 
+# Define a function to handle HTTP errors returned by the iDRAC REST API
+def handle_error(result):
+    if result.status_code == 401:
+        raise InvalidAuth()
 
+    if result.status_code == 404:
+        error = result.json()['error']
+        if error['code'] == 'Base.1.0.GeneralError' and 'RedFish attribute is disabled' in \
+                error['@Message.ExtendedInfo'][0]['Message']:
+            raise RedfishConfig()
+
+    if result.status_code != 200:
+        raise CannotConnect(result.text)
+
+# Define a class to interact with the iDRAC REST API
 class IdracRest:
     def __init__(self, host, username, password):
-        self.base_url = BASE_URL + host
+        self.host = host
         self.auth = (username, password)
-        self.session = requests.Session()
 
+    # Define a method to get the power usage from the iDRAC REST API
     def get_power_usage(self):
-        path = '/redfish/v1/Chassis/System.Embedded.1/Power/PowerControl'
-        return self.get_path(path)[JSON_POWER_CONSUMED_WATTS]
+        result = self.get_path(drac_powercontrol_path)
+        handle_error(result)
 
+        power_results = result.json()
+        return power_results[JSON_POWER_CONSUMED_WATTS]
+
+    # Define a method to get device info from the iDRAC REST API
     def get_device_info(self):
-        path = '/redfish/v1/Chassis/System.Embedded.1'
-        results = self.get_path(path)
+        result = self.get_path(drac_chassis_path)
+        handle_error(result)
+
+        chassis_results = result.json()
         return {
-            JSON_NAME: results[JSON_NAME],
-            JSON_MANUFACTURER: results[JSON_MANUFACTURER],
-            JSON_MODEL: results[JSON_MODEL],
-            JSON_SERIAL_NUMBER: results[JSON_SERIAL_NUMBER]
+            JSON_NAME: chassis_results[JSON_NAME],
+            JSON_MANUFACTURER: chassis_results[JSON_MANUFACTURER],
+            JSON_MODEL: chassis_results[JSON_MODEL],
+            JSON_SERIAL_NUMBER: chassis_results[JSON_SERIAL_NUMBER]
         }
 
+    # Define a method to get the firmware version from the iDRAC REST API
     def get_firmware_version(self):
-        path = '/redfish/v1/Managers/iDRAC.Embedded.1'
-        results = self.get_path(path)
-        return results[JSON_FIRMWARE_VERSION]
+        result = self.get_path(drac_managers_path)
+        handle_error(result)
 
+        manager_results = result.json()
+        return manager_results[JSON_FIRMWARE_VERSION]
+
+    # Define a method to get a path from the iDRAC REST API
     def get_path(self, path):
-        url = self.base_url + path
-        try:
-            response = self.session.get(url, auth=self.auth, verify=False)
-            response.raise_for_status()
-            return response.json()
-        except HTTPError as error:
-            if error.response.status_code == 401:
-                raise InvalidAuth() from error
-            if error.response.status_code == 404:
-                message = error.response.json()['error']['@Message.ExtendedInfo'][0]['Message']
-                if 'RedFish attribute is disabled' in message:
-                    raise RedfishConfig() from error
-            raise CannotConnect(error.response.text) from error
+        return requests.get(protocol + self.host + path, auth=self.auth, verify=False)
 
 
+# Define some custom exceptions for error handling
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
