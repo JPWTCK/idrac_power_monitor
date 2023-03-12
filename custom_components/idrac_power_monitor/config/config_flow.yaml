@@ -1,0 +1,22 @@
+idrac_rest:
+  name: iDrac REST
+  description: Configure iDrac REST integration.
+  fields:
+    host:
+      name: Host
+      description: The hostname or IP address of the iDrac server.
+      example: 192.168.1.100
+      type: string
+      required: true
+    username:
+      name: Username
+      description: The username to use for authentication.
+      example: admin
+      type: string
+      required: true
+    password:
+      name: Password
+      description: The password to use for authentication.
+      example: secret
+      type: string
+      required: true
