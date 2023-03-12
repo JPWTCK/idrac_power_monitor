@@ -1,21 +1,31 @@
+# Define the name of the workflow
 name: Validate
 
+# Define the events that trigger the workflow
 on:
   push:
   pull_request:
   schedule:
     - cron: "0 0 * * *"
+  # Allow the workflow to be triggered manually from the Actions tab
   workflow_dispatch:
 
+# Define the jobs that the workflow will perform
 jobs:
+  # Define a job named 'validate-hacs'
   validate-hacs:
+    # Define the environment the job will run on
     runs-on: "ubuntu-latest"
+    # Define the individual steps that make up the job
     steps:
-      - uses: "actions/checkout@v2"
+      # Set up Node.js 16.x
       - name: Setup Node.js 16.x
         uses: actions/setup-node@v2
         with:
           node-version: "16.x"
+      # Check out the code repository that triggered the workflow
+      - uses: "actions/checkout@v2"
+      # Run HACS validation on the integration category
       - name: HACS validation
         uses: "hacs/action@main"
         with:
