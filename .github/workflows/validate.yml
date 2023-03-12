@@ -20,11 +20,11 @@ jobs:
     steps:
       # Set up Node.js 16.x
       - name: Setup Node.js 16.x
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: "16.x"
       # Check out the code repository that triggered the workflow
-      - uses: "actions/checkout@v2"
+      - uses: "actions/checkout@v3"
       # Run HACS validation on the integration category
       - name: HACS validation
         uses: "hacs/action@main"
