@@ -1,33 +1,25 @@
 {
-  "domain": "idrac_power_monitor",
-  // The domain is a unique identifier for your integration. It should be a string that describes the functionality of your integration.
-
-  "name": "iDrac power monitor",
-  // The name is a human-readable name for your integration. It should be a string that describes the functionality of your integration.
-
-  "config_flow": true,
-  // The config_flow field specifies whether your integration requires user configuration. If set to true, the user will be prompted to enter configuration options when they install your integration.
-
-  "documentation": "https://github.com/JPWTCK/idrac_power_monitor",
-  // The documentation field should contain a URL to your integration's documentation.
-
-  "requirements": [],
-  // The requirements field is a list of Python packages that your integration depends on. If your integration doesn't have any dependencies, you can leave this field empty.
-
-  "dependencies": ["http"],
-  // The dependencies field is a list of other Home Assistant integrations that your integration depends on. For example, if your integration requires the MQTT integration, you should include "mqtt" in this list.
-
-  "codeowners": [
+  "domain": "idrac_power_monitor",  // The domain is a unique identifier for your integration. It should be a string that describes the functionality of your integration.
+  
+  "name": "iDrac power monitor",  // The name is a human-readable name for your integration. It should be a string that describes the functionality of your integration.
+  
+  "config_flow": true,  // The config_flow field specifies whether your integration requires user configuration. If set to true, the user will be prompted to enter configuration options when they install your integration.
+  
+  "documentation": "https://github.com/JPWTCK/idrac_power_monitor",  // The documentation field should contain a URL to your integration's documentation.
+  
+  "requirements": [],  // The requirements field is a list of Python packages that your integration depends on. If your integration doesn't have any dependencies, you can leave this field empty.
+  
+  "dependencies": ["http"],  // The dependencies field is a list of other Home Assistant integrations that your integration depends on. For example, if your integration requires the MQTT integration, you should include "mqtt" in this list.
+  
+  "codeowners": [  // The codeowners field specifies the GitHub users who are responsible for maintaining this integration. This field is optional, but it can be useful for identifying who to contact if there are issues with the integration.
     "@JPWTCK"
   ],
-  // The codeowners field specifies the GitHub users who are responsible for maintaining this integration. This field is optional, but it can be useful for identifying who to contact if there are issues with the integration.
-
-  "iot_class": "local_polling",
-  // The iot_class field specifies the class of device that your integration represents. In this case, it appears that your integration is a local device that is polled for updates.
-
-  "version": "1.0.0",
-  // The version field specifies the version of your integration. This should be a string in the format "major.minor.patch". For example, "1.0.0" is the first release of your integration, "1.1.0" is a minor update, and "2.0.0" is a major update.
-
-  "issue_tracker": "https://github.com/JPWTCK/idrac_power_monitor/issues"
-  // The issue_tracker field should contain a URL to your integration's issue tracker.
+  
+  "iot_class": "local_polling",  // The iot_class field specifies the class of device that your integration represents. In this case, it appears that your integration is a local device that is polled for updates.
+  
+  "version": "1.0.0",  // The version field specifies the version of your integration. This should be a string in the format "major.minor.patch". For example, "1.0.0" is the first release of your integration, "1.1.0" is a minor update, and "2.0.0" is a major update.
+  
+  "issue_tracker": "https://github.com/JPWTCK/idrac_power_monitor/issues"  // The issue_tracker field should contain a URL to your integration's issue tracker.
+  
+  "integration_type": "hub",  // The integration_type field specifies the type of integration. In this case, it is a "hub" integration, which is a high-level integration that interacts with other lower-level integrations to provide a more cohesive experience.
 }
