@@ -1,5 +1,4 @@
 {
-  "domain": "idrac_power_monitor",
   "name": "iDrac power monitor",
   "config_flow": true,
   "documentation": "https://github.com/JPWTCK/idrac_power_monitor",
