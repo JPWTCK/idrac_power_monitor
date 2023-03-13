@@ -3,7 +3,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "iDrac power monitor",
         "description": "Enter the iDrac's credentials.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
