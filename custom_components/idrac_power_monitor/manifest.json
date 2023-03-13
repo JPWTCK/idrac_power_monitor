@@ -1,13 +1,13 @@
 {
   "domain": "idrac_power_monitor",
   "name": "iDrac power monitor",
+  "codeowners": ["@JPWTCK"],
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://github.com/JPWTCK/idrac_power_monitor",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/JPWTCK/idrac_power_monitor/issues",
   "requirements": [],
-  "version": "1.0.0",
-  "integration_type": "hub",
-  "codeowners": ["@JPWTCK"]
+  "version": "1.0.0"
 }
