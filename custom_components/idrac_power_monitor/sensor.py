@@ -89,4 +89,8 @@ class CannotConnect(HomeAssistantError):
 
 
 class InvalidAuth(HomeAssistantError):
-    """Error to indicate there
+    """Error to indicate there is invalid auth."""
+
+
+class RedfishConfig(HomeAssistantError):
+    """Error to indicate that Redfish was not properly configured"""
