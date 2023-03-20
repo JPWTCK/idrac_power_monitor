@@ -39,12 +39,11 @@ class IdracCurrentPowerSensor(SensorEntity):
         self._attr_native_value = self.rest.get_power_usage()
 
 class IdracTotalPowerSensor(SensorEntity):
-    def __init__(self, rest: IdracRest, device_info, unique_id, sample_interval):
+    def __init__(self, rest: IdracRest, device_info, unique_id):
         self.rest = rest
         self.entity_description = TOTAL_POWER_SENSOR_DESCRIPTION
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
-        self.sample_interval = sample_interval
         self._attr_native_value = 0.0
         self.last_power_usage = None
         self.last_update_time = None
@@ -58,7 +57,7 @@ class IdracTotalPowerSensor(SensorEntity):
         else:
             # Calculate the energy usage using trapezoidal rule integration
             delta_time = (now - self.last_update_time).total_seconds()
-            if delta_time >= self.sample_interval:
+            if delta_time >= 60:
                 # Calculate the average power usage over the current interval
                 avg_power_usage = (self.rest.get_power_usage() + self.last_power_usage) / 2.0
 
