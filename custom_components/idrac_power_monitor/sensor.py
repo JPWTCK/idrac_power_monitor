@@ -1,5 +1,22 @@
 import requests
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    DEVICE_CLASS_POWER,
+    POWER_WATT,
+)
+
+from .const import (
+    CONF_HOST,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    JSON_NAME,
+    JSON_MANUFACTURER,
+    JSON_MODEL,
+    JSON_SERIAL_NUMBER,
+    JSON_FIRMWARE_VERSION,
+    JSON_POWER_CONSUMED_WATTS,
+)
 
 from .const import (
     JSON_NAME, JSON_MANUFACTURER, JSON_MODEL, JSON_SERIAL_NUMBER,
@@ -94,3 +111,32 @@ class InvalidAuth(HomeAssistantError):
 
 class RedfishConfig(HomeAssistantError):
     """Error to indicate that Redfish was not properly configured"""
+    
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the iDRAC Power Monitor sensor."""
+    host = entry.data[CONF_HOST]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+
+    idrac = IdracRest(host, username, password)
+
+    try:
+        power_usage = await hass.async_add_executor_job(idrac.get_power_usage)
+    except (CannotConnect, InvalidAuth) as error:
+        raise ConfigEntryNotReady from error
+
+    device_info = await hass.async_add_executor_job(idrac.get_device_info)
+
+    firmware_version = await hass.async_add_executor_job(idrac.get_firmware_version)
+
+    async_add_entities([
+        IdracPowerUsageSensor(
+            idrac,
+            device_info[JSON_NAME],
+            device_info[JSON_MANUFACTURER],
+            device_info[JSON_MODEL],
+            device_info[JSON_SERIAL_NUMBER],
+            firmware_version,
+            power_usage,
+        )
+    ])
