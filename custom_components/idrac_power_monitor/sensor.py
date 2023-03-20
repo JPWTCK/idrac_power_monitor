@@ -5,6 +5,7 @@ from .const import (
     JSON_NAME, JSON_MANUFACTURER, JSON_MODEL, JSON_SERIAL_NUMBER,
     JSON_POWER_CONSUMED_WATTS, JSON_FIRMWARE_VERSION
 )
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 # Define some constants for the iDRAC REST API paths
 protocol = 'https://'
@@ -65,6 +66,22 @@ class IdracRest:
     def get_path(self, path):
         return requests.get(protocol + self.host + path, auth=self.auth, verify=False)
 
+class IdracPowerMonitorDataUpdateCoordinator(DataUpdateCoordinator):
+    def __init__(self, hass, idrac, interval):
+        self.idrac = idrac
+        self.interval = interval
+        super().__init__(
+            hass,
+            logger=_LOGGER,
+            name='idrac_power_monitor',
+            update_method=self.async_update_data
+        )
+
+    async def async_update_data(self):
+        try:
+            return await self.hass.async_add_executor_job(self.idrac.get_power_usage)
+        except Exception as error:
+            raise UpdateFailed(f"Error communicating with API: {error}") from error
 
 # Define some custom exceptions for error handling
 class CannotConnect(HomeAssistantError):
@@ -72,8 +89,4 @@ class CannotConnect(HomeAssistantError):
 
 
 class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class RedfishConfig(HomeAssistantError):
-    """Error to indicate that Redfish was not properly configured"""
+    """Error to indicate there
