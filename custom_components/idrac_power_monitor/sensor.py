@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     info = await hass.async_add_executor_job(rest_client.get_device_info)
     firmware_version = await hass.async_add_executor_job(rest_client.get_firmware_version)
     device_info = DeviceInfo(
-        identifiers={('domain', DOMAIN), ('model', info[JSON_MODEL]), ('serial', info[JSON_SERIAL_NUMBER])},
+        identifiers=[('domain', DOMAIN), ('model', info[JSON_MODEL]), ('serial', info[JSON_SERIAL_NUMBER])],
         name=info[JSON_NAME],
         manufacturer=info[JSON_MANUFACTURER],
         model=info[JSON_MODEL],
@@ -39,17 +39,33 @@ class IdracCurrentPowerSensor(SensorEntity):
         self._attr_native_value = self.rest.get_power_usage()
 
 class IdracTotalPowerSensor(SensorEntity):
-    def __init__(self, rest: IdracRest, device_info, unique_id):
+    def __init__(self, rest: IdracRest, device_info, unique_id, sample_interval):
         self.rest = rest
         self.entity_description = TOTAL_POWER_SENSOR_DESCRIPTION
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
-        self.last_update = datetime.now()
+        self.sample_interval = sample_interval
         self._attr_native_value = 0.0
+        self.last_power_usage = None
+        self.last_update_time = None
 
     def update(self) -> None:
         now = datetime.now()
-        seconds_between = (now - self.last_update).total_seconds()
-        hours_between = seconds_between / 3600.0
-        self._attr_native_value += self.rest.get_power_usage() * hours_between
-        self.last_update = now
+        if self.last_power_usage is None:
+            # This is the first reading
+            self.last_power_usage = self.rest.get_power_usage()
+            self.last_update_time = now
+        else:
+            # Calculate the energy usage using trapezoidal rule integration
+            delta_time = (now - self.last_update_time).total_seconds()
+            if delta_time >= self.sample_interval:
+                # Calculate the average power usage over the current interval
+                avg_power_usage = (self.rest.get_power_usage() + self.last_power_usage) / 2.0
+
+                # Calculate the energy usage using the trapezoidal rule
+                energy_usage = avg_power_usage * delta_time / 3600.0  # kWh
+                self._attr_native_value += energy_usage
+
+                # Update the last power usage and update time
+                self.last_power_usage = self.rest.get_power_usage()
+                self.last_update_time = now
