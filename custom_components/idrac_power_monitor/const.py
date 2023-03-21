@@ -1,7 +1,7 @@
 # Importing necessary constants and components from Home Assistant
 from homeassistant.const import (
     POWER_WATT, ENERGY_WATT_HOUR,
-    DEVICE_CLASS_ENERGY
+    DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
 )
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL,
@@ -33,7 +33,7 @@ CURRENT_POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
     name=' current power usage',
     icon='mdi:server',
     native_unit_of_measurement=POWER_WATT,
-    device_class=DEVICE_CLASS_ENERGY,
+    device_class=DEVICE_CLASS_POWER,
     state_class=STATE_CLASS_MEASUREMENT
 )
 
