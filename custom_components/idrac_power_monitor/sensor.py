@@ -1,142 +1,113 @@
-import requests
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    DEVICE_CLASS_POWER,
-    POWER_WATT,
-)
+"""Platform for iDrac power sensor integration."""
+# Import necessary modules
+from __future__ import annotations
+import logging
+from datetime import datetime
+import backoff as backoff
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from requests import RequestException
 
-from .const import (
-    CONF_HOST,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    JSON_NAME,
-    JSON_MANUFACTURER,
-    JSON_MODEL,
-    JSON_SERIAL_NUMBER,
-    JSON_FIRMWARE_VERSION,
-    JSON_POWER_CONSUMED_WATTS,
-)
+# Import constants and classes from other files in the package
+from .const import (DOMAIN, CURRENT_POWER_SENSOR_DESCRIPTION, DATA_IDRAC_REST_CLIENT, JSON_NAME, JSON_MODEL,
+                    JSON_MANUFACTURER, JSON_SERIAL_NUMBER, TOTAL_POWER_SENSOR_DESCRIPTION)
+from .idrac_rest import IdracRest
 
-from .const import (
-    JSON_NAME, JSON_MANUFACTURER, JSON_MODEL, JSON_SERIAL_NUMBER,
-    JSON_POWER_CONSUMED_WATTS, JSON_FIRMWARE_VERSION
-)
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+_LOGGER = logging.getLogger(__name__)
 
-# Define some constants for the iDRAC REST API paths
+# Define constants used to access the iDrac API
 protocol = 'https://'
-drac_managers_path = '/redfish/v1/Managers/iDRAC.Embedded.1'
+drac_managers = '/redfish/v1/Managers/iDRAC.Embedded.1'
 drac_chassis_path = '/redfish/v1/Chassis/System.Embedded.1'
 drac_powercontrol_path = '/redfish/v1/Chassis/System.Embedded.1/Power/PowerControl'
 
-# Define a function to handle HTTP errors returned by the iDRAC REST API
-def handle_error(result):
-    if result.status_code == 401:
-        raise InvalidAuth()
+# Define async function called when the sensor entities are added to the Home Assistant system
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+    # Get the iDracRest object from the data stored in the ConfigEntry
+    rest_client = hass.data[DOMAIN][entry.entry_id][DATA_IDRAC_REST_CLIENT]
 
-    if result.status_code == 404:
-        error = result.json()['error']
-        if error['code'] == 'Base.1.0.GeneralError' and 'RedFish attribute is disabled' in \
-                error['@Message.ExtendedInfo'][0]['Message']:
-            raise RedfishConfig()
+    # Get basic device information and firmware version from the iDrac
+    # These calls are executed synchronously, so we use async_add_executor_job to run them in a separate thread
+    info = await hass.async_add_executor_job(target=rest_client.get_device_info)
+    firmware_version = await hass.async_add_executor_job(target=rest_client.get_firmware_version)
 
-    if result.status_code != 200:
-        raise CannotConnect(result.text)
+    # Extract device information and create a DeviceInfo object to store it
+    name = info[JSON_NAME]
+    model = info[JSON_MODEL]
+    manufacturer = info[JSON_MANUFACTURER]
+    serial = info[JSON_SERIAL_NUMBER]
+    device_info = DeviceInfo(
+        identifiers={('domain', DOMAIN), ('model', model), ('serial', serial)},
+        name=name,
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=firmware_version
+    )
 
-# Define a class to interact with the iDRAC REST API
-class IdracRest:
-    def __init__(self, host, username, password):
-        self.host = host
-        self.auth = (username, password)
-
-    # Define a method to get the power usage from the iDRAC REST API
-    def get_power_usage(self):
-        result = self.get_path(drac_powercontrol_path)
-        handle_error(result)
-
-        power_results = result.json()
-        return power_results[JSON_POWER_CONSUMED_WATTS]
-
-    # Define a method to get device info from the iDRAC REST API
-    def get_device_info(self):
-        result = self.get_path(drac_chassis_path)
-        handle_error(result)
-
-        chassis_results = result.json()
-        return {
-            JSON_NAME: chassis_results[JSON_NAME],
-            JSON_MANUFACTURER: chassis_results[JSON_MANUFACTURER],
-            JSON_MODEL: chassis_results[JSON_MODEL],
-            JSON_SERIAL_NUMBER: chassis_results[JSON_SERIAL_NUMBER]
-        }
-
-    # Define a method to get the firmware version from the iDRAC REST API
-    def get_firmware_version(self):
-        result = self.get_path(drac_managers_path)
-        handle_error(result)
-
-        manager_results = result.json()
-        return manager_results[JSON_FIRMWARE_VERSION]
-
-    # Define a method to get a path from the iDRAC REST API
-    def get_path(self, path):
-        return requests.get(protocol + self.host + path, auth=self.auth, verify=False)
-
-class IdracPowerMonitorDataUpdateCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, idrac, interval):
-        self.idrac = idrac
-        self.interval = interval
-        super().__init__(
-            hass,
-            logger=_LOGGER,
-            name='idrac_power_monitor',
-            update_method=self.async_update_data
-        )
-
-    async def async_update_data(self):
-        try:
-            return await self.hass.async_add_executor_job(self.idrac.get_power_usage)
-        except Exception as error:
-            raise UpdateFailed(f"Error communicating with API: {error}") from error
-
-# Define some custom exceptions for error handling
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class RedfishConfig(HomeAssistantError):
-    """Error to indicate that Redfish was not properly configured"""
-    
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the iDRAC Power Monitor sensor."""
-    host = entry.data[CONF_HOST]
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-
-    idrac = IdracRest(host, username, password)
-
-    try:
-        power_usage = await hass.async_add_executor_job(idrac.get_power_usage)
-    except (CannotConnect, InvalidAuth) as error:
-        raise ConfigEntryNotReady from error
-
-    device_info = await hass.async_add_executor_job(idrac.get_device_info)
-
-    firmware_version = await hass.async_add_executor_job(idrac.get_firmware_version)
-
+    # Create the IdracCurrentPowerSensor and IdracTotalPowerSensor entities, passing in the iDracRest object and DeviceInfo object
     async_add_entities([
-        IdracPowerUsageSensor(
-            idrac,
-            device_info[JSON_NAME],
-            device_info[JSON_MANUFACTURER],
-            device_info[JSON_MODEL],
-            device_info[JSON_SERIAL_NUMBER],
-            firmware_version,
-            power_usage,
-        )
+        IdracCurrentPowerSensor(rest_client, device_info, f"{serial}_{model}_current", model),
+        IdracTotalPowerSensor(rest_client, device_info, f"{serial}_{model}_total", model)
     ])
+
+# Define the IdracCurrentPowerSensor class, which represents the current power usage sensor entity
+class IdracCurrentPowerSensor(SensorEntity):
+    """The iDrac's current power sensor entity."""
+
+    def __init__(self, rest: IdracRest, device_info, unique_id, model):
+        # Store the iDracRest object and DeviceInfo object as attributes
+        self.rest = rest
+        self._attr_device_info = device_info
+
+        # Set the unique ID and name of the sensor entity
+        self._attr_unique_id = unique_id
+        self.entity_description = CURRENT_POWER_SENSOR_DESCRIPTION
+        self.entity_description.name = model + self.entity_description.name
+
+        # Initialize the sensor value to None
+        self._attr_native_value = None
+
+    def update(self) -> None:
+        """Get the latest data from the iDrac."""
+
+         # Retrieve the current power usage from the iDracRest object
+        self._attr_native_value = self.rest.get_power_usage()
+
+class IdracTotalPowerSensor(SensorEntity):
+    """The iDrac's total power sensor entity."""
+
+    def __init__(self, rest: IdracRest, device_info, unique_id, model):
+        # Initialize the iDracRest object and other properties
+        self.rest = rest
+
+        # Set the entity description for this sensor
+        self.entity_description = TOTAL_POWER_SENSOR_DESCRIPTION
+        # Add the device model to the sensor name
+        self.entity_description.name = model + self.entity_description.name
+        # Set device information and unique ID for Home Assistant
+        self._attr_device_info = device_info
+        self._attr_unique_id = unique_id
+
+        # Initialize last update time to the current time
+        self.last_update = datetime.now()
+
+        # Initialize the native value to 0.0
+        self._attr_native_value = 0.0
+
+    def update(self) -> None:
+        """Get the latest data from the iDrac."""
+        # Get the current time
+        now = datetime.now()
+
+        # Calculate the time elapsed since the last update in seconds and hours
+        seconds_between = (now - self.last_update).total_seconds()
+        hours_between = seconds_between / 3600.0
+
+        # Get the power usage from the iDrac and multiply it by the time elapsed
+        # since the last update to get the total power used during that time period
+        self._attr_native_value += self.rest.get_power_usage() * hours_between
+
+        # Update the last update time to the current time
+        self.last_update = now
