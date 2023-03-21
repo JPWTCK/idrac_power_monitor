@@ -8,6 +8,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.restore_state import RestoreEntity
 
 # Import constants and classes from other files in the package
 from .const import (DOMAIN, CURRENT_POWER_SENSOR_DESCRIPTION, DATA_IDRAC_REST_CLIENT, JSON_NAME, JSON_MODEL,
@@ -62,8 +63,7 @@ class IdracCurrentPowerSensor(SensorEntity):
         # Retrieve the current power usage from the iDracRest object
         self._attr_native_value = await self.hass.async_add_executor_job(self.rest.get_power_usage)
 
-
-class IdracTotalPowerSensor(SensorEntity):
+class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
     """The iDrac's total power sensor entity."""
 
     def __init__(self, rest: IdracRest, device_info, unique_id, model):
@@ -75,6 +75,18 @@ class IdracTotalPowerSensor(SensorEntity):
         self.last_update = time.time()
         self.last_power_usage = 0.0
         self._attr_native_value = 0.0
+
+    async def async_added_to_hass(self):
+        """When entity is added to Home Assistant."""
+        # Call the parent class's method
+        await super().async_added_to_hass()
+
+        # Get the last state if it exists
+        last_state = await self.async_get_last_state()
+
+        # If there is a last state, restore the native value from it
+        if last_state:
+            self._attr_native_value = float(last_state.state)
 
     async def async_update(self) -> None:
         """Get the latest data from the iDrac asynchronously."""
