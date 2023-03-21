@@ -2,6 +2,7 @@
 # Import necessary modules
 from __future__ import annotations
 import logging
+import time
 from datetime import datetime
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -61,7 +62,7 @@ class IdracCurrentPowerSensor(SensorEntity):
         # Retrieve the current power usage from the iDracRest object
         self._attr_native_value = await self.hass.async_add_executor_job(self.rest.get_power_usage)
 
-# Define the IdracTotalPowerSensor class
+
 class IdracTotalPowerSensor(SensorEntity):
     """The iDrac's total power sensor entity."""
 
@@ -71,22 +72,28 @@ class IdracTotalPowerSensor(SensorEntity):
         self._attr_unique_id = unique_id
         self.entity_description = TOTAL_POWER_SENSOR_DESCRIPTION
         self.entity_description.name = f"{model}{self.entity_description.name}"
-        self.last_update = datetime.now()
+        self.last_update = time.time()
+        self.last_power_usage = 0.0
         self._attr_native_value = 0.0
 
     async def async_update(self) -> None:
         """Get the latest data from the iDrac asynchronously."""
         # Get the current time
-        now = datetime.now()
+        now = time.time()
 
         # Calculate the time elapsed since the last update in seconds and hours
-        seconds_between = (now - self.last_update).total_seconds()
+        seconds_between = now - self.last_update
         hours_between = seconds_between / 3600.0
 
-        # Get the power usage from the iDrac and multiply it by the time elapsed
-        # since the last update to get the total power used during that time period
-        power_usage = await self.hass.async_add_executor_job(self.rest.get_power_usage)
-        self._attr_native_value += power_usage * hours_between
+        # Get the current power usage from the iDrac
+        current_power_usage = await self.hass.async_add_executor_job(self.rest.get_power_usage)
 
-        # Update the last update time to the current time
+        # Use the trapezoidal rule to approximate the energy consumed during the time period
+        energy_consumed = (self.last_power_usage + current_power_usage) / 2.0 * hours_between
+
+        # Convert energy consumed to kilowatt-hours (kWh) and update the total energy consumption
+        self._attr_native_value += energy_consumed / 1000.0
+
+        # Update the last update time to the current time and the last power usage to the current power usage
         self.last_update = now
+        self.last_power_usage = current_power_usage
