@@ -91,8 +91,8 @@ class IdracTotalPowerSensor(SensorEntity):
         # Use the trapezoidal rule to approximate the energy consumed during the time period
         energy_consumed = (self.last_power_usage + current_power_usage) / 2.0 * hours_between
 
-        # Convert energy consumed to kilowatt-hours (kWh) and update the total energy consumption
-        self._attr_native_value += energy_consumed / 1000.0
+        # Update the total energy consumption in watt-hours (Wh)
+        self._attr_native_value += energy_consumed
 
         # Update the last update time to the current time and the last power usage to the current power usage
         self.last_update = now
