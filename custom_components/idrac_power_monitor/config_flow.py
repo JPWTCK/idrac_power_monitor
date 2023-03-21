@@ -2,7 +2,6 @@
 from __future__ import annotations
 import logging
 from typing import Any
-
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
@@ -29,7 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iDrac REST."""
 
-    # Define the version of the configuration flow
     VERSION = 1
 
     # Define the async_step_user function, which handles the initial step of the config flow
@@ -49,18 +47,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             # Validate the user's input by creating an IdracRest object and checking for connection errors
             info = await self.validate_input(user_input)
-        except (CannotConnect, InvalidAuth, RedfishConfig):
-            # If there are connection errors, set an error message
+        except CannotConnect:
             errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except RedfishConfig:
+            errors["base"] = "redfish_config"
         except Exception:
-            # If there is an unexpected error, log the exception and set an error message
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+
+        # If there were no errors, create the config entry using the user's input
         else:
-            # If there are no errors, create the config entry using the user's input
             return self.async_create_entry(title=info["model_name"], data=user_input)
 
-        # If there are errors, show the form to the user again with the errors displayed
+        # If there were errors, show the form to the user again with the errors displayed
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
@@ -74,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Use async_add_executor_job to run get_device_info in a thread pool, since it is not async
-        device_info = await hass.async_add_executor_job(rest_client.get_device_info)
+        device_info = await hass.async_add_executor_job(self.hass, target=rest_client.get_device_info)
         model_name = device_info[JSON_MODEL]
 
-        return {"model_name": model_name}
+        return dict(model_name=model_name)
