@@ -41,11 +41,10 @@ class CustomSSLAdapter(HTTPAdapter):
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         self.poolmanager = CustomPoolManager(
-            ssl_options=self.ssl_options,
             assert_hostname=False,
             cert_reqs=ssl.CERT_NONE,
-            *args,
             ssl_options=self.ssl_options,
+            *args,
             **kwargs
         )
 
