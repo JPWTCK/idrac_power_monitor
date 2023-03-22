@@ -39,6 +39,11 @@ class HostNameIgnoringVerifiedHTTPSConnection(VerifiedHTTPSConnection):
         return True
 
 class HostNameIgnoringAdapter(HTTPAdapter):
+    def __init__(self, host, port):
+        super().__init__()
+        self.host = host
+        self.port = port
+
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         self.poolmanager = HTTPSConnectionPool(
             self.host, port=self.port, cert_reqs="CERT_NONE",
@@ -46,7 +51,6 @@ class HostNameIgnoringAdapter(HTTPAdapter):
             connection_class=HostNameIgnoringVerifiedHTTPSConnection,
             **pool_kwargs
         )
-
 # Define a class to interact with the iDRAC REST API
 class IdracRest:
     def __init__(self, host, username, password):
@@ -78,7 +82,8 @@ class IdracRest:
         session = requests.Session()
         session.verify = self.cert_file
         session.auth = self.auth
-        session.mount(protocol + self.host, HostNameIgnoringAdapter())  # Use the custom adapter
+        adapter = HostNameIgnoringAdapter(self.host, 443)  # Instantiate the custom adapter
+        session.mount(protocol + self.host, adapter)  # Use the custom adapter
         return session.get(protocol + self.host + path)
 
     # Other methods in IdracRest class
