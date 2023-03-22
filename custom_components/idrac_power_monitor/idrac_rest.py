@@ -45,6 +45,7 @@ class CustomSSLAdapter(HTTPAdapter):
             assert_hostname=False,
             cert_reqs=ssl.CERT_NONE,
             *args,
+            ssl_options=self.ssl_options,
             **kwargs
         )
 
