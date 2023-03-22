@@ -1,5 +1,3 @@
-import os
-import tempfile
 import requests
 from homeassistant.exceptions import HomeAssistantError
 
@@ -65,20 +63,8 @@ class IdracRest:
 
     # Define a method to get a path from the iDRAC REST API
     def get_path(self, path):
-        # Load the certificate temporarily
-        with tempfile.NamedTemporaryFile(delete=False) as cert_file:
-            cert_file.write(b"-----BEGIN CERTIFICATE-----\n")
-            cert_file.write(b"YOUR_CERTIFICATE_CONTENT_HERE")
-            cert_file.write(b"\n-----END CERTIFICATE-----\n")
-            cert_file.flush()
+        return requests.get(protocol + self.host + path, auth=self.auth, verify=False)
 
-            # Pass the certificate to the verify parameter
-            response = requests.get(protocol + self.host + path, auth=self.auth, verify=cert_file.name)
-
-            # Remove the temporary certificate file
-            os.unlink(cert_file.name)
-
-        return response
 
 # Define some custom exceptions for error handling
 class CannotConnect(HomeAssistantError):
