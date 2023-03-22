@@ -40,13 +40,26 @@ class CustomSSLAdapter(HTTPAdapter):
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
-        self.poolmanager = PoolManager(
+        self.poolmanager = CustomPoolManager(
             ssl_options=self.ssl_options,
             assert_hostname=False,
             cert_reqs=ssl.CERT_NONE,
             *args,
             **kwargs
         )
+
+class CustomPoolManager(PoolManager):
+    def __init__(self, ssl_options=ssl_.DEFAULT_CIPHERS, *args, **kwargs):
+        self.ssl_options = ssl_options
+        super().__init__(*args, **kwargs)
+
+    def _new_pool(self, scheme, host, port, request_context=None):
+        if scheme == "https":
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            request_context["ssl_context"] = context
+        return super()._new_pool(scheme, host, port, request_context)
 
 # Define a class to interact with the iDRAC REST API
 class IdracRest:
