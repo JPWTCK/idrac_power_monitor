@@ -1,5 +1,7 @@
 import requests
 import ssl
+import requests.packages.urllib3.util.ssl_ as ssl_
+ssl_.DEFAULT_CIPHERS = ssl_.DEFAULT_CIPHERS + ':HIGH:!DH:!aNULL'
 from homeassistant.exceptions import HomeAssistantError
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -48,28 +50,14 @@ class CustomSSLAdapter(HTTPAdapter):
             **kwargs
         )
 
-class CustomPoolManager(PoolManager):
-    def __init__(self, *args, **kwargs):
-        self.ssl_options = kwargs.pop('ssl_options', ssl_.DEFAULT_CIPHERS)
-        super().__init__(*args, **kwargs)
-
-    def _new_pool(self, scheme, host, port, request_context=None):
-        if scheme == "https":
-            context = ssl.create_default_context()
-            context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE
-            request_context = request_context or {}
-            request_context["ssl_context"] = context
-            request_context["assert_hostname"] = False
-        return super()._new_pool(scheme, host, port, request_context)
-
 # Define a class to interact with the iDRAC REST API
-class IdracRest:
+class IDRACRestClient:
     def __init__(self, host, username, password):
         self.host = host
         self.auth = (username, password)
         self.session = requests.Session()
-        self.session.mount('https://', CustomSSLAdapter())
+        self.session.verify = False
+        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
     # Define a method to get the power usage from the iDRAC REST API
     def get_power_usage(self):
