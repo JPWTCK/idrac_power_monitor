@@ -93,6 +93,7 @@ class IdracRest:
         adapter.init_poolmanager(pool_connections=1, pool_maxsize=1, pool_block=True, **pool_kwargs)
         return session.get(protocol + self.host + path)
 
+
     # Other methods in IdracRest class
 
     # Define a method to get the power usage from the iDRAC REST API
