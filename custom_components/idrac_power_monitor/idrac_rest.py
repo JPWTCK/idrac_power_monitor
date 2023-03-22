@@ -1,5 +1,9 @@
 import requests
+import ssl
 from homeassistant.exceptions import HomeAssistantError
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.poolmanager import PoolManager
+from requests.packages.urllib3.util import ssl_
 
 from .const import (
     JSON_NAME, JSON_MANUFACTURER, JSON_MODEL, JSON_SERIAL_NUMBER,
@@ -26,11 +30,31 @@ def handle_error(result):
     if result.status_code != 200:
         raise CannotConnect(result.text)
 
+# Define a custom SSL context adapter for requests
+class CustomSSLAdapter(HTTPAdapter):
+    def __init__(self, ssl_options=ssl_.DEFAULT_CIPHERS, *args, **kwargs):
+        self.ssl_options = ssl_options
+        super().__init__(*args, **kwargs)
+
+    def init_poolmanager(self, *args, **kwargs):
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        self.poolmanager = PoolManager(
+            ssl_options=self.ssl_options,
+            assert_hostname=False,
+            cert_reqs=ssl.CERT_NONE,
+            *args,
+            **kwargs
+        )
+
 # Define a class to interact with the iDRAC REST API
 class IdracRest:
     def __init__(self, host, username, password):
         self.host = host
         self.auth = (username, password)
+        self.session = requests.Session()
+        self.session.mount('https://', CustomSSLAdapter())
 
     # Define a method to get the power usage from the iDRAC REST API
     def get_power_usage(self):
@@ -60,20 +84,17 @@ class IdracRest:
 
         manager_results = result.json()
         return manager_results[JSON_FIRMWARE_VERSION]
-
+    
     # Define a method to get a path from the iDRAC REST API
     def get_path(self, path):
-        return requests.get(protocol + self.host + path, auth=self.auth, verify=False)
-
+        return self.session.get(protocol + self.host + path, auth=self.auth)
 
 # Define some custom exceptions for error handling
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
-
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
 
 class RedfishConfig(HomeAssistantError):
     """Error to indicate that Redfish was not properly configured"""
