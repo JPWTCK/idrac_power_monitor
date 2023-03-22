@@ -58,6 +58,7 @@ class CustomPoolManager(PoolManager):
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
+            request_context = request_context or {}
             request_context["ssl_context"] = context
         return super()._new_pool(scheme, host, port, request_context)
 
