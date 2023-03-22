@@ -43,9 +43,9 @@ class HostNameIgnoringAdapter(HTTPAdapter):
         super().__init__()
         self.host = host
         self.port = port
+        self.poolmanager = None
 
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
-        pool_kwargs['host'] = self.host
         self.poolmanager = HTTPSConnectionPool(
             host=self.host,
             port=self.port,
