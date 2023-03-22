@@ -1,4 +1,8 @@
 import requests
+import ssl
+import socket
+import tempfile
+from contextlib import closing
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -31,6 +35,26 @@ class IdracRest:
     def __init__(self, host, username, password):
         self.host = host
         self.auth = (username, password)
+        self.cert_file = self.download_self_signed_cert()
+
+    # Define a method to download the self-signed certificate and save it to a temporary file
+    def download_self_signed_cert(self):
+        # Connect to the iDRAC host with SSL
+        with closing(socket.create_connection((self.host, 443))) as sock:
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
+            with closing(context.wrap_socket(sock, server_hostname=self.host)) as ssl_sock:
+                # Get the iDRAC certificate
+                cert_pem = ssl.DER_cert_to_PEM_cert(ssl_sock.getpeercert(binary_form=True))
+
+        # Save the certificate to a temporary file
+        cert_file = tempfile.NamedTemporaryFile(delete=False)
+        cert_file.write(cert_pem.encode())
+        cert_file.close()
+
+        return cert_file.name
 
     # Define a method to get the power usage from the iDRAC REST API
     def get_power_usage(self):
@@ -63,17 +87,14 @@ class IdracRest:
 
     # Define a method to get a path from the iDRAC REST API
     def get_path(self, path):
-        return requests.get(protocol + self.host + path, auth=self.auth, verify=False)
-
+        return requests.get(protocol + self.host + path, auth=self.auth, verify=self.cert_file)
 
 # Define some custom exceptions for error handling
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
-
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
 
 class RedfishConfig(HomeAssistantError):
     """Error to indicate that Redfish was not properly configured"""
