@@ -4,6 +4,9 @@ import socket
 import tempfile
 from contextlib import closing
 from homeassistant.exceptions import HomeAssistantError
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.connection import VerifiedHTTPSConnection
+from requests.packages.urllib3.connectionpool import HTTPSConnectionPool
 
 from .const import (
     JSON_NAME, JSON_MANUFACTURER, JSON_MODEL, JSON_SERIAL_NUMBER,
@@ -30,6 +33,20 @@ def handle_error(result):
     if result.status_code != 200:
         raise CannotConnect(result.text)
 
+# Create a custom requests adapter that ignores the hostname mismatch error
+class HostNameIgnoringVerifiedHTTPSConnection(VerifiedHTTPSConnection):
+    def _match_hostname(self, cert, asserted_hostname):
+        return True
+
+class HostNameIgnoringAdapter(HTTPAdapter):
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
+        self.poolmanager = HTTPSConnectionPool(
+            self.host, port=self.port, cert_reqs="CERT_NONE",
+            ssl_version=ssl.PROTOCOL_TLS,
+            connection_class=HostNameIgnoringVerifiedHTTPSConnection,
+            **pool_kwargs
+        )
+
 # Define a class to interact with the iDRAC REST API
 class IdracRest:
     def __init__(self, host, username, password):
@@ -55,6 +72,16 @@ class IdracRest:
         cert_file.close()
 
         return cert_file.name
+
+    # Define a method to get a path from the iDRAC REST API
+    def get_path(self, path):
+        session = requests.Session()
+        session.verify = self.cert_file
+        session.auth = self.auth
+        session.mount(protocol + self.host, HostNameIgnoringAdapter())  # Use the custom adapter
+        return session.get(protocol + self.host + path)
+
+    # Other methods in IdracRest class
 
     # Define a method to get the power usage from the iDRAC REST API
     def get_power_usage(self):
@@ -84,10 +111,6 @@ class IdracRest:
 
         manager_results = result.json()
         return manager_results[JSON_FIRMWARE_VERSION]
-
-    # Define a method to get a path from the iDRAC REST API
-    def get_path(self, path):
-        return requests.get(protocol + self.host + path, auth=self.auth, verify=self.cert_file)
 
 # Define some custom exceptions for error handling
 class CannotConnect(HomeAssistantError):
