@@ -60,6 +60,7 @@ class CustomPoolManager(PoolManager):
             context.verify_mode = ssl.CERT_NONE
             request_context = request_context or {}
             request_context["ssl_context"] = context
+            request_context["assert_hostname"] = False
         return super()._new_pool(scheme, host, port, request_context)
 
 # Define a class to interact with the iDRAC REST API
