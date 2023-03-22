@@ -41,12 +41,12 @@ class HostNameIgnoringVerifiedHTTPSConnection(VerifiedHTTPSConnection):
 class HostNameIgnoringAdapter(HTTPAdapter):
     def __init__(self, host, port):
         super().__init__()
-        self.host = host
         self.port = port
 
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
+        self.host = pool_kwargs['host']  # Set the host attribute directly
         self.poolmanager = HTTPSConnectionPool(
-            host=self.host,  # Use the host attribute directly
+            host=self.host,
             port=self.port,
             cert_reqs="CERT_NONE",
             ssl_version=ssl.PROTOCOL_TLS,
