@@ -84,14 +84,14 @@ class IdracRest:
 
     # Define a method to get a path from the iDRAC REST API
     def get_path(self, path):
-    session = requests.Session()
-    session.verify = self.cert_file
-    session.auth = self.auth
-    adapter = HostNameIgnoringAdapter(self.host, 443)  # Instantiate the custom adapter
-    session.mount(protocol + self.host, adapter)  # Use the custom adapter
-    pool_kwargs = {'host': self.host}  # Pass the host parameter to the init_poolmanager method
-    adapter.init_poolmanager(pool_connections=1, pool_maxsize=1, pool_block=True, **pool_kwargs)
-    return session.get(protocol + self.host + path)
+        session = requests.Session()
+        session.verify = self.cert_file
+        session.auth = self.auth
+        adapter = HostNameIgnoringAdapter(self.host, 443)  # Instantiate the custom adapter
+        session.mount(protocol + self.host, adapter)  # Use the custom adapter
+        pool_kwargs = {'host': self.host}  # Pass the host parameter to the init_poolmanager method
+        adapter.init_poolmanager(pool_connections=1, pool_maxsize=1, pool_block=True, **pool_kwargs)
+        return session.get(protocol + self.host + path)
 
     # Other methods in IdracRest class
 
