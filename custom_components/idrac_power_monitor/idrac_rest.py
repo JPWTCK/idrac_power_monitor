@@ -51,7 +51,7 @@ class CustomSSLAdapter(HTTPAdapter):
         )
 
 # Define a class to interact with the iDRAC REST API
-class IDRACRestClient:
+class IdracRest:
     def __init__(self, host, username, password):
         self.host = host
         self.auth = (username, password)
