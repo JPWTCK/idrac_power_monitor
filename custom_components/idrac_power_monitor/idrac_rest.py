@@ -49,8 +49,8 @@ class CustomSSLAdapter(HTTPAdapter):
         )
 
 class CustomPoolManager(PoolManager):
-    def __init__(self, ssl_options=ssl_.DEFAULT_CIPHERS, *args, **kwargs):
-        self.ssl_options = ssl_options
+    def __init__(self, *args, **kwargs):
+        self.ssl_options = kwargs.pop('ssl_options', ssl_.DEFAULT_CIPHERS)
         super().__init__(*args, **kwargs)
 
     def _new_pool(self, scheme, host, port, request_context=None):
