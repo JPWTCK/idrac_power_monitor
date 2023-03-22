@@ -46,11 +46,14 @@ class HostNameIgnoringAdapter(HTTPAdapter):
 
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         self.poolmanager = HTTPSConnectionPool(
-            self.host, port=self.port, cert_reqs="CERT_NONE",
+            host=self.host,  # Use the host attribute directly
+            port=self.port,
+            cert_reqs="CERT_NONE",
             ssl_version=ssl.PROTOCOL_TLS,
             connection_class=HostNameIgnoringVerifiedHTTPSConnection,
             **pool_kwargs
         )
+
 # Define a class to interact with the iDRAC REST API
 class IdracRest:
     def __init__(self, host, username, password):
