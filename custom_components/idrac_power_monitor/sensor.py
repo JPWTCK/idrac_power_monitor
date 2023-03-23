@@ -3,12 +3,12 @@
 from __future__ import annotations
 import logging
 import time
-from datetime import datetime
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
+from typing import Callable
 
 # Import constants and classes from other files in the package
 from .const import (DOMAIN, CURRENT_POWER_SENSOR_DESCRIPTION, DATA_IDRAC_REST_CLIENT, JSON_NAME, JSON_MODEL,
@@ -18,7 +18,9 @@ from .idrac_rest import IdracRest
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the sensor entities for the iDrac power monitor integration."""
     # Get the iDracRest object from the data stored in the ConfigEntry
     rest_client = hass.data[DOMAIN][entry.entry_id][DATA_IDRAC_REST_CLIENT]
@@ -108,4 +110,3 @@ class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
         # Update the last update time to the current time and the last power usage to the current power usage
         self.last_update = now
         self.last_power_usage = current_power_usage
-        
