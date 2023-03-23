@@ -11,13 +11,11 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant as hass
 from homeassistant.data_entry_flow import FlowResult
 
-# Import constants used in this module from the const.py file
 from .const import DOMAIN, JSON_MODEL
 from .idrac_rest import IdracRest, CannotConnect, InvalidAuth, RedfishConfig
 
 _LOGGER = logging.getLogger(__name__)
 
-# Define the user data schema using Voluptuous, a library for defining schemas and validating data
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -60,7 +58,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=info["model_name"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors
         )
 
     async def validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
@@ -76,7 +76,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password=data[CONF_PASSWORD]
         )
 
-        device_info = await hass.async_add_executor_job(self.hass, target=rest_client.get_device_info)
+        device_info = await hass.async_add_executor_job(
+            self.hass, target=rest_client.get_device_info
+        )
         model_name = device_info[JSON_MODEL]
 
         return {"model_name": model_name}
