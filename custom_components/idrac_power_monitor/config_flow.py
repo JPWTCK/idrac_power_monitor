@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except RedfishConfig:
             errors["base"] = "redfish_config"
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception: %s", ex)
             errors["base"] = "unknown"
 
