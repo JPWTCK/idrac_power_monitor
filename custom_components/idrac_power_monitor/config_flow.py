@@ -1,4 +1,8 @@
-# Import necessary functions and classes from Home Assistant
+"""
+Config flow for the iDrac Power Monitor Home Assistant integration.
+"""
+
+# pylint: disable=import-error
 from __future__ import annotations
 import logging
 from typing import Any
@@ -68,6 +72,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     # Define the validate_input function, which creates an IdracRest object and checks for connection errors
     async def validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Validate the user's input by creating an IdracRest object and checking for connection errors.
+
+        :param data: The user's input data.
+        :return: A dictionary containing the model_name key with the model name as its value.
+        """
         rest_client = IdracRest(
             host=data[CONF_HOST],
             username=data[CONF_USERNAME],
@@ -78,4 +88,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_info = await hass.async_add_executor_job(self.hass, target=rest_client.get_device_info)
         model_name = device_info[JSON_MODEL]
 
-        return dict(model_name=model_name)
+        return {"model_name": model_name}
