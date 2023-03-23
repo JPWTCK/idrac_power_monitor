@@ -1,8 +1,4 @@
-"""
-Constants and entity descriptions for the iDrac Power Monitor Home Assistant integration.
-"""
-
-# pylint: disable=import-error
+# Importing necessary constants and components from Home Assistant
 from homeassistant.const import (
     POWER_WATT, ENERGY_WATT_HOUR,
     DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
@@ -34,7 +30,7 @@ JSON_POWER_CONSUMED_WATTS = 'PowerConsumedWatts'
 # Defining a sensor entity description for the current power usage sensor
 CURRENT_POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
     key='current_power_usage',
-    name='current power usage',
+    name=' current power usage',
     icon='mdi:server',
     native_unit_of_measurement=POWER_WATT,
     device_class=DEVICE_CLASS_POWER,
@@ -44,7 +40,7 @@ CURRENT_POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
 # Defining a sensor entity description for the total power usage sensor
 TOTAL_POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
     key='total_power_usage',
-    name='total power usage',
+    name=' total power usage',
     icon='mdi:server',
     native_unit_of_measurement=ENERGY_WATT_HOUR,
     device_class=DEVICE_CLASS_ENERGY,
