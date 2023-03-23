@@ -1,18 +1,26 @@
 """Platform for iDrac power sensor integration."""
 # Import necessary modules
 from __future__ import annotations
+from typing import Callable
+
 import logging
 import time
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.restore_state import RestoreEntity
-from typing import Callable
+from homeassistant.helpers.entity import DeviceInfo, RestoreEntity
 
-# Import constants and classes from other files in the package
-from .const import (DOMAIN, CURRENT_POWER_SENSOR_DESCRIPTION, DATA_IDRAC_REST_CLIENT, JSON_NAME, JSON_MODEL,
-                    JSON_MANUFACTURER, JSON_SERIAL_NUMBER, TOTAL_POWER_SENSOR_DESCRIPTION)
+from .const import (
+    DOMAIN,
+    CURRENT_POWER_SENSOR_DESCRIPTION,
+    DATA_IDRAC_REST_CLIENT,
+    JSON_NAME,
+    JSON_MODEL,
+    JSON_MANUFACTURER,
+    JSON_SERIAL_NUMBER,
+    TOTAL_POWER_SENSOR_DESCRIPTION,
+)
 
 from .idrac_rest import IdracRest
 
