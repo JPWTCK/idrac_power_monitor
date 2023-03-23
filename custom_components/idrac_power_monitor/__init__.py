@@ -4,6 +4,7 @@ iDrac Power Monitor Home Assistant integration.
 This module contains the methods to set up and unload the iDrac Power Monitor integration.
 """
 
+# pylint: disable=import-error
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -25,7 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Add the IdracRest object to hass.data using the entry_id as a key
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        DATA_IDRAC_REST_CLIENT: IdracRest(entry.data[HOST], entry.data[USERNAME], entry.data[PASSWORD])
+        DATA_IDRAC_REST_CLIENT: IdracRest(
+            entry.data[HOST], entry.data[USERNAME], entry.data[PASSWORD]
+        )
     }
 
     # Set up the platforms associated with this integration using the config entry
