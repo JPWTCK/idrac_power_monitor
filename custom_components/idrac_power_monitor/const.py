@@ -1,4 +1,8 @@
-# Importing necessary constants and components from Home Assistant
+"""
+Constants and entity descriptions for the iDrac Power Monitor Home Assistant integration.
+"""
+
+# pylint: disable=import-error
 from homeassistant.const import (
     POWER_WATT, ENERGY_WATT_HOUR,
     DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
