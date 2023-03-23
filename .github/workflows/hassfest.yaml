@@ -1,5 +1,5 @@
 # Define the name of the workflow
-name: Validate with hassfest
+name: Hassfest Validation
 
 # Define the events that trigger the workflow
 on:
