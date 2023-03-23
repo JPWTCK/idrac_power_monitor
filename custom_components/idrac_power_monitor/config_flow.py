@@ -41,6 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+        info = None
 
         try:
             info = await self.validate_input(user_input)
@@ -53,15 +54,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception as ex:
             _LOGGER.exception("Unexpected exception: %s", ex)
             errors["base"] = "unknown"
-        finally:
-            if not errors:
-                return self.async_create_entry(title=info["model_name"], data=user_input)
 
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
-                errors=errors
-            )
+        if not errors and info:
+            return self.async_create_entry(title=info["model_name"], data=user_input)
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors
+        )
 
     async def validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
         """
