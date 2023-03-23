@@ -20,6 +20,7 @@ drac_powercontrol_path = '/redfish/v1/Chassis/System.Embedded.1/Power/PowerContr
 
 # Define a function to handle HTTP errors returned by the iDRAC REST API
 def handle_error(result):
+    """Handle HTTP errors returned by the iDRAC REST API."""
     if result.status_code == 401:
         raise InvalidAuth()
 
@@ -34,11 +35,13 @@ def handle_error(result):
 
 # Define a custom SSL context adapter for requests
 class CustomSSLAdapter(HTTPAdapter):
+    """A custom SSL context adapter for requests."""
     def __init__(self, ssl_options=ssl_.DEFAULT_CIPHERS, *args, **kwargs):
         self.ssl_options = ssl_options
         super().__init__(*args, **kwargs)
 
     def init_poolmanager(self, *args, **kwargs):
+        """Initialize the pool manager with a custom SSL context."""
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
@@ -52,6 +55,7 @@ class CustomSSLAdapter(HTTPAdapter):
 
 # Define a class to interact with the iDRAC REST API
 class IdracRest:
+    """A class to interact with the iDRAC REST API."""
     def __init__(self, host, username, password):
         self.host = host
         self.auth = (username, password)
@@ -61,6 +65,7 @@ class IdracRest:
 
     # Define a method to get the power usage from the iDRAC REST API
     def get_power_usage(self):
+        """Get the power usage from the iDRAC REST API."""
         result = self.get_path(drac_powercontrol_path)
         handle_error(result)
 
@@ -69,6 +74,7 @@ class IdracRest:
 
     # Define a method to get device info from the iDRAC REST API
     def get_device_info(self):
+        """Get device information from the iDRAC REST API."""
         result = self.get_path(drac_chassis_path)
         handle_error(result)
 
@@ -82,6 +88,7 @@ class IdracRest:
 
     # Define a method to get the firmware version from the iDRAC REST API
     def get_firmware_version(self):
+        """Get the firmware version from the iDRAC REST API."""
         result = self.get_path(drac_managers_path)
         handle_error(result)
 
@@ -90,7 +97,8 @@ class IdracRest:
     
     # Define a method to get a path from the iDRAC REST API
     def get_path(self, path):
-        return self.session.get(protocol + self.host + path, auth=self.auth)
+        """Get a path from the iDRAC REST API."""
+        return self.session.get(f"{protocol}{self.host}{path}", auth=self.auth)
 
 # Define some custom exceptions for error handling
 class CannotConnect(HomeAssistantError):
@@ -101,3 +109,4 @@ class InvalidAuth(HomeAssistantError):
 
 class RedfishConfig(HomeAssistantError):
     """Error to indicate that Redfish was not properly configured"""
+    

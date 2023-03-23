@@ -18,8 +18,8 @@ from .idrac_rest import IdracRest
 
 _LOGGER = logging.getLogger(__name__)
 
-# Define async function for setting up sensor entities
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable) -> None:
+    """Set up the sensor entities for the iDrac power monitor integration."""
     # Get the iDracRest object from the data stored in the ConfigEntry
     rest_client = hass.data[DOMAIN][entry.entry_id][DATA_IDRAC_REST_CLIENT]
 
@@ -46,11 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         IdracTotalPowerSensor(rest_client, device_info, f"{serial}_{model}_total", model)
     ])
 
-# Define the IdracCurrentPowerSensor class
 class IdracCurrentPowerSensor(SensorEntity):
     """The iDrac's current power sensor entity."""
 
-    def __init__(self, rest: IdracRest, device_info, unique_id, model):
+    def __init__(self, rest: IdracRest, device_info: DeviceInfo, unique_id: str, model: str):
         self.rest = rest
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
@@ -66,7 +65,7 @@ class IdracCurrentPowerSensor(SensorEntity):
 class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
     """The iDrac's total power sensor entity."""
 
-    def __init__(self, rest: IdracRest, device_info, unique_id, model):
+    def __init__(self, rest: IdracRest, device_info: DeviceInfo, unique_id: str, model: str):
         self.rest = rest
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
@@ -76,7 +75,7 @@ class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
         self.last_power_usage = 0.0
         self._attr_native_value = 0.0
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         # Call the parent class's method
         await super().async_added_to_hass()
@@ -109,3 +108,4 @@ class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
         # Update the last update time to the current time and the last power usage to the current power usage
         self.last_update = now
         self.last_power_usage = current_power_usage
+        
