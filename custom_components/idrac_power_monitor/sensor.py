@@ -1,35 +1,25 @@
 """Platform for iDrac power sensor integration."""
 # Import necessary modules
 from __future__ import annotations
-from typing import Callable
-
 import logging
 import time
-
+from datetime import datetime
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, RestoreEntity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    DOMAIN,
-    CURRENT_POWER_SENSOR_DESCRIPTION,
-    DATA_IDRAC_REST_CLIENT,
-    JSON_NAME,
-    JSON_MODEL,
-    JSON_MANUFACTURER,
-    JSON_SERIAL_NUMBER,
-    TOTAL_POWER_SENSOR_DESCRIPTION,
-)
+# Import constants and classes from other files in the package
+from .const import (DOMAIN, CURRENT_POWER_SENSOR_DESCRIPTION, DATA_IDRAC_REST_CLIENT, JSON_NAME, JSON_MODEL,
+                    JSON_MANUFACTURER, JSON_SERIAL_NUMBER, TOTAL_POWER_SENSOR_DESCRIPTION)
 
 from .idrac_rest import IdracRest
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
-) -> None:
-    """Set up the sensor entities for the iDrac power monitor integration."""
+# Define async function for setting up sensor entities
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     # Get the iDracRest object from the data stored in the ConfigEntry
     rest_client = hass.data[DOMAIN][entry.entry_id][DATA_IDRAC_REST_CLIENT]
 
@@ -56,10 +46,11 @@ async def async_setup_entry(
         IdracTotalPowerSensor(rest_client, device_info, f"{serial}_{model}_total", model)
     ])
 
+# Define the IdracCurrentPowerSensor class
 class IdracCurrentPowerSensor(SensorEntity):
     """The iDrac's current power sensor entity."""
 
-    def __init__(self, rest: IdracRest, device_info: DeviceInfo, unique_id: str, model: str):
+    def __init__(self, rest: IdracRest, device_info, unique_id, model):
         self.rest = rest
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
@@ -75,7 +66,7 @@ class IdracCurrentPowerSensor(SensorEntity):
 class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
     """The iDrac's total power sensor entity."""
 
-    def __init__(self, rest: IdracRest, device_info: DeviceInfo, unique_id: str, model: str):
+    def __init__(self, rest: IdracRest, device_info, unique_id, model):
         self.rest = rest
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
@@ -85,7 +76,7 @@ class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
         self.last_power_usage = 0.0
         self._attr_native_value = 0.0
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
         # Call the parent class's method
         await super().async_added_to_hass()
