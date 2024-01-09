@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     firmware_version = await hass.async_add_executor_job(target=rest_client.get_firmware_version)
 
     # Extract device information and create a DeviceInfo object to store it
-    name = f'{info[JSON_NAME]}({entry.data[CONF_HOST]})'
+    name = f'{info[JSON_MODEL]} ({entry.data[CONF_HOST]})'
     model = info[JSON_MODEL]
     manufacturer = info[JSON_MANUFACTURER]
     serial = info[JSON_SERIAL_NUMBER]
@@ -40,22 +40,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     # Create and add the IdracCurrentPowerSensor and IdracTotalPowerSensor entities
     async_add_entities([
-        IdracCurrentPowerSensor(hass, rest_client, device_info, f"{serial}_{model}_current", model),
-        IdracTotalPowerSensor(hass, rest_client, device_info, f"{serial}_{model}_total", model)
+        IdracCurrentPowerSensor(hass, rest_client, device_info, f"{serial}_{model}_current", name),
+        IdracTotalPowerSensor(hass, rest_client, device_info, f"{serial}_{model}_total", name)
     ])
 
 # Define the IdracCurrentPowerSensor class
 class IdracCurrentPowerSensor(SensorEntity):
     """The iDrac's current power sensor entity."""
 
-    def __init__(self, hass, rest: IdracRest, device_info, unique_id, model):
+    def __init__(self, hass, rest: IdracRest, device_info, unique_id, name):
         self.hass = hass
         self.rest = rest
 
         # Defining a sensor entity description for the current power usage sensor
         self.entity_description = SensorEntityDescription(
             key="current_power_usage",
-            name=f"{model} current power usage",
+            name=f"{name} current power usage",
             icon="mdi:server",
             native_unit_of_measurement=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
@@ -75,14 +75,14 @@ class IdracCurrentPowerSensor(SensorEntity):
 class IdracTotalPowerSensor(RestoreEntity, SensorEntity):
     """The iDrac's total power sensor entity."""
 
-    def __init__(self, hass, rest: IdracRest, device_info, unique_id, model):
+    def __init__(self, hass, rest: IdracRest, device_info, unique_id, name):
         self.hass = hass
         self.rest = rest
 
         # Defining a sensor entity description for the total power usage sensor
         self.entity_description = SensorEntityDescription(
             key="total_power_usage",
-            name=f"{model} total power usage",
+            name=f"{name} total power usage",
             icon="mdi:server",
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
