@@ -1,0 +1,23 @@
+{
+    "title": "iDrac power monitor",
+    "config": {
+      "step": {
+        "user": {
+          "data": {
+            "host": "Hostname oder IP-Adresse der iDrac Instanz",
+            "username": "iDrac Benutzername",
+            "password": "iDrac Passwort"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "Verbindung konnte nicht hergestellt werden",
+        "invalid_auth": "Ungültige Anmeldedaten",
+        "redfish_config": "Redfish ist nicht aktiviert. Start the iDRAC GUI with a web browser and traverse to the Network Service page - übersicht -> iDRAC-Einstellungen -> Netzwerk -> Dienste -> Redfish. Überprüfe das Aktiviert ausgewählt ist.",
+        "unknown": "Unbekannter Fehler"
+      },
+      "abort": {
+        "already_configured": "Die Integration wurde bereits konfiguriert"
+      }
+    }
+  }

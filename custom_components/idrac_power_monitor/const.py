@@ -1,13 +1,3 @@
-# Importing necessary constants and components from Home Assistant
-from homeassistant.const import (
-    POWER_WATT, ENERGY_WATT_HOUR,
-    DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
-)
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL,
-    SensorEntityDescription,
-)
-
 # Defining the domain name for the integration
 DOMAIN = 'idrac_power_monitor'
 
@@ -26,23 +16,3 @@ JSON_NAME = 'Name'
 JSON_SERIAL_NUMBER = 'SerialNumber'
 JSON_FIRMWARE_VERSION = 'FirmwareVersion'
 JSON_POWER_CONSUMED_WATTS = 'PowerConsumedWatts'
-
-# Defining a sensor entity description for the current power usage sensor
-CURRENT_POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key='current_power_usage',
-    name=' current power usage',
-    icon='mdi:server',
-    native_unit_of_measurement=POWER_WATT,
-    device_class=DEVICE_CLASS_POWER,
-    state_class=STATE_CLASS_MEASUREMENT
-)
-
-# Defining a sensor entity description for the total power usage sensor
-TOTAL_POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key='total_power_usage',
-    name=' total power usage',
-    icon='mdi:server',
-    native_unit_of_measurement=ENERGY_WATT_HOUR,
-    device_class=DEVICE_CLASS_ENERGY,
-    state_class=STATE_CLASS_TOTAL
-)
